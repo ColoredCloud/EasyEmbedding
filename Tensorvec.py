@@ -142,8 +142,8 @@ class TensorVec():
     def __iter__(self):
         return list(self.nestmap(self.embList,lambda x:x))
 
-    def __str__(self,rd=3):
-        output = str(list(self.nestmap(self.embList,lambda x:round(x,rd))))
+    def __str__(self):
+        output = str(list(self.nestmap(self.embList, lambda x:round(x, Normalizer.round))))
         if len(output)>35:
             output = output[:15]+' ... ' + output[-15:]
         return output

@@ -30,6 +30,7 @@ This project implements a system for generating text using a custom implementati
    from Optimizer import Bundle
    from Tensorvec import Vec
    from toolfunc import Ut
+   from Normalize import Normalizer
    ```
 
 ### Creat TensorVec instance:
