@@ -27,8 +27,8 @@ This project implements a system for generating text using a custom implementati
 
 ### Import:
    ```python
-   from Optimizer import Bundle
-   from Tensorvec import Vec
+   from Optimizer import BundleList
+   from Tensorvec import funcs
    from toolfunc import Ut
    from Normalize import Normalizer
    ```

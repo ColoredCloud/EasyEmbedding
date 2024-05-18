@@ -1,4 +1,5 @@
 import torch
+from tqdm import tqdm
 from toolfunc import Ut
 from Normalize import Normalizer
 from Tensorvec import *
@@ -98,7 +99,110 @@ class Bundle():
     def val(self):
         return self.tensorVec.value
 
+class BundleList():
+    def __init__(self):
+        self.Bundles = []
+        self.trainLoader=None
+        self.device = 'cpu'
+        self.setEmbSize(2)
+        self.lr = None
 
+    def __iter__(self):
+        return self.Bundles.__iter__()
+
+    def setEmbSize(self,embsize):
+        if not isinstance(embsize,int) or embsize < 1:
+            Ut.raiseError("Embedding size must be a positive integer", sys._getframe().f_code.co_name)
+            return
+        self.embsize = embsize
+        self.weight = torch.randn(embsize,device=self.device,requires_grad=True)
+        self.bias = torch.randn(embsize, device=self.device,requires_grad=True)
+
+    def loadTrainSet(self,dataset):
+        if any(not isinstance(s,str) for s in dataset):
+            Ut.raiseError("dataset must be a list of strings", sys._getframe().f_code.co_name)
+            return
+        self.trainLoader = [s.split(' ') for s in dataset]
+
+    def wordIsInBundles(self,word):
+        if not isinstance(word,str):
+            Ut.raiseError("word must be a string", sys._getframe().f_code.co_name)
+            return
+        return any(word == bundle.val() for bundle in self.Bundles)
+
+    def getWordBundles(self,word):
+        if not isinstance(word,str):
+            Ut.raiseError("word must be a string", sys._getframe().f_code.co_name)
+            return
+        for bundle in self.Bundles:
+            if word == bundle.val():
+                return bundle
+        Ut.raiseError("word not in bundles", sys._getframe().f_code.co_name)
+    def InitializeTrainDataSet(self):
+        if self.trainLoader is None:
+            Ut.raiseError("No train set loaded", sys._getframe().f_code.co_name)
+        for sentence in self.trainLoader:
+            for wordai in range(len(sentence)):
+                worda = sentence[wordai]
+                for wordbi in range(len(sentence)):
+                    wordb = sentence[wordbi]
+
+                    if not self.wordIsInBundles(worda):
+                        self.Bundles.append(Bundle(Vec(embnum=self.embsize, value=sentence[wordai], device=self.device), lr=self.lr))
+
+                    if worda == wordb: continue
+
+                    if not self.wordIsInBundles(wordb):
+                        self.Bundles.append(Bundle(Vec(embnum=self.embsize, value=sentence[wordbi], device=self.device), lr=self.lr))
+
+                    self.getWordBundles(worda).add(self.getWordBundles(wordb), distance=abs(wordai - wordbi))
+
+    def set_lr(self, lr):
+        for bundle in self.Bundles:
+            bundle.set_lr(lr)
+        self.lr = lr
+    def train(self,epoch=1,lr=None):
+        if lr is not None:
+            self.set_lr(lr)
+        elif self.lr is None:
+            Ut.raiseError("No learning rate set", sys._getframe().f_code.co_name)
+            return
+
+        lossSum = 0
+        for e in range(epoch):
+            with tqdm(range(len(self.Bundles)), desc=f'epoch : {e} loss = {round(float(lossSum),Normalizer.round)} epoch : {e + 1} processingd') as t:
+
+                lossSum = 0
+                for bundle in self.Bundles:
+                    loss = bundle.forward(self.Bundles,self.weight,self.bias,lable=bundle.val(),optim=True)
+                    if loss is not None and not loss.isnan():
+                        lossSum += loss
+                    else:
+                        Ut.raiseError(f"Fatal error : loss not a number", sys._getframe().f_code.co_name)
+                        break
+                    t.update(1)
+
+    def __str__(self):
+        output = {}
+        for bundle in self.Bundles:
+            output[bundle.val()] = str(bundle.tensorVec)
+        return str(output)
+
+    def repr(self, veryDetailed = False):
+        if veryDetailed:
+            for bundle in self.Bundles:
+                print(repr(bundle))
+
+
+        weight = str(list(funcs.nestmap(self.weight, lambda x: round(x, Normalizer.round))))
+        if len(weight) > 35:
+            weight = weight[:15] + ' ... ' + weight[-15:]
+        Ut.colorWord(f'weight : {weight}', 'b')
+        bias = str(list(funcs.nestmap(self.bias, lambda x: round(x, Normalizer.round))))
+        if len(bias) > 35:
+            bias = bias[:15] + ' ... ' + bias[-15:]
+
+        Ut.colorWord(f'bias : {bias}', 'b')
 
 if __name__ == '__main__':
     from Tensorvec import *
