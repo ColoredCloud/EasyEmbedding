@@ -7,25 +7,6 @@ import numpy as np
 
 import torch
 Ut.colorWord('torch package in Tensorvec has initialized',color='g')
-def Vec(embList=None, value=None,embnum=0,device='cpu'):
-
-    if isinstance(embList,list):
-        if isinstance(embList[0],list):
-            if not all(isinstance(e, list) or isinstance(e, float) or isinstance(e, int) for e in embList):
-                Ut.raiseError('Wrong type of vec',sys._getframe().f_code.co_name)
-                return
-            return [Vec(embList=embl, value=v,embnum=nm,device=device) for embl, v,nm in zip(embList, value,embnum)] \
-                if value is not None else [Vec(embList=embl,device=device) for embl in embList]
-        return TensorVec(embList, value,embnum,device=device)
-    elif isinstance(embList,TensorVec):
-        return copy.copy(embList)
-
-    elif embList is None and embnum != 0:
-        return TensorVec(embList, value, embnum,device=device)
-
-    Ut.raiseError('Wrong type of vec',sys._getframe().f_code.co_name)
-
-    return
 
 class TensorVec():
     def __init__(self, embList:list=None, value=None,embnum = 0,device='cpu'):
@@ -156,10 +137,31 @@ class TensorVec():
     def parameters(self):
         return self.embList
 
+funcs = TensorVec()
 
+def Vec(embList=None, value=None,embnum=0,device='cpu'):
+    if isinstance(embList,list):
+        if isinstance(embList[0],list):
+            if not all(isinstance(e, list) or isinstance(e, float) or isinstance(e, int) for e in embList):
+                Ut.raiseError('Wrong type of vec',sys._getframe().f_code.co_name)
+                return
+            return [Vec(embList=embl, value=v,embnum=nm,device=device) for embl, v,nm in zip(embList, value,embnum)] \
+                if value is not None else [Vec(embList=embl,device=device) for embl in embList]
+        return TensorVec(embList, value,embnum,device=device)
+    elif isinstance(embList,TensorVec):
+        return copy.copy(embList)
+
+    elif isinstance(embList,torch.Tensor):
+        return TensorVec(funcs.nestmap(embList), value, embnum,device=device)
+
+    elif embList is None and embnum != 0:
+        return TensorVec(embList, value, embnum,device=device)
+
+    Ut.raiseError('Wrong type of vec',sys._getframe().f_code.co_name)
+
+    return
 
 if __name__ == '__main__':
-    funcs = TensorVec()
     Ut.setWarning(False)
     a = Vec(value='a',embnum=3,device='cuda')
     b = Vec([0,0,0],value='b',device='cuda')

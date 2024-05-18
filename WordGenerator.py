@@ -1,9 +1,10 @@
 import torch
 
 from Optimizer import Bundle
-from Tensorvec import Vec
+from Tensorvec import Vec,funcs
 from toolfunc import Ut
 from Normalize import Normalizer
+
 import random,time,math,sys
 from tqdm import tqdm
 import os
@@ -20,7 +21,7 @@ def SimpleWordGenerator(generated_text_bundle, bundlelist):
             continue
         for generated_bundle_index in range(len(generated_text_bundle)):
             generated_bundle = generated_text_bundle[generated_bundle_index]
-            lossSum +=generated_bundle.getLoss(bundle, optim=False, distance=len(generated_text_bundle) - generated_bundle_index)
+            lossSum +=generated_bundle.getDifference(bundle, weight=bundlelist.weight,bias=bundlelist.bias, distance=len(generated_text_bundle) - generated_bundle_index)
 
         lossDenominator += lossSum
         Losss[val] = lossSum
@@ -39,11 +40,20 @@ class BundleList():
         self.Bundles = []
         self.trainLoader=None
         self.device = 'cpu'
-        self.embsize = 2
+        self.setEmbSize(2)
         self.lr = None
 
     def __iter__(self):
         return self.Bundles.__iter__()
+
+    def setEmbSize(self,embsize):
+        if not isinstance(embsize,int) or embsize < 1:
+            Ut.raiseError("Embedding size must be a positive integer", sys._getframe().f_code.co_name)
+            return
+        self.embsize = embsize
+        self.weight = torch.randn(embsize,device=self.device,requires_grad=True)
+        self.bias = torch.randn(embsize, device=self.device,requires_grad=True)
+
     def loadTrainSet(self,dataset):
         if any(not isinstance(s,str) for s in dataset):
             Ut.raiseError("dataset must be a list of strings", sys._getframe().f_code.co_name)
@@ -100,11 +110,12 @@ class BundleList():
 
                 lossSum = 0
                 for bundle in self.Bundles:
-                    loss = bundle.forward(self.Bundles)
+                    loss = bundle.forward(self.Bundles,self.weight,self.bias,lable=bundle.val(),optim=True)
                     if loss is not None and not loss.isnan():
                         lossSum += loss
                     else:
                         Ut.raiseError(f"Fatal error : loss not a number", sys._getframe().f_code.co_name)
+                        break
                     t.update(1)
 
     def __str__(self):
@@ -113,24 +124,36 @@ class BundleList():
             output[bundle.val()] = str(bundle.tensorVec)
         return str(output)
 
-    def repr(self):
-        for bundle in self.Bundles:
-            print(repr(bundle))
+    def repr(self, veryDetailed = False):
+        if veryDetailed:
+            for bundle in self.Bundles:
+                print(repr(bundle))
+
+
+        weight = str(list(funcs.nestmap(self.weight, lambda x: round(x, Normalizer.round))))
+        if len(weight) > 35:
+            weight = weight[:15] + ' ... ' + weight[-15:]
+        Ut.colorWord(f'weight : {weight}', 'b')
+        bias = str(list(funcs.nestmap(self.bias, lambda x: round(x, Normalizer.round))))
+        if len(bias) > 35:
+            bias = bias[:15] + ' ... ' + bias[-15:]
+
+        Ut.colorWord(f'bias : {bias}', 'b')
 if __name__ == '__main__':
 
     Normalizer.set('round',2)
     Normalizer.normal(0,5)
 
     trainTest = ['How are you?','Fine thank you, and you?','Nice to meet you!','Who are you?']
-    #trainTest = ['a','b','c']
     Bundles = BundleList()
+    Bundles.setEmbSize(10)
     Bundles.loadTrainSet(trainTest)
     Bundles.InitializeTrainDataSet()
 
 
     #Bundles.repr()
 
-    Bundles.train(epoch=20,lr=5)
+    Bundles.train(epoch=20,lr=1)
     os.system('cls')
     Bundles.repr()
 
