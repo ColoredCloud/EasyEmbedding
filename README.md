@@ -81,4 +81,4 @@ This project implements a system for generating text using a custom implementati
 
 ## License
 
-This project is licensed under the [MIT License](LICENSE).
+This project is licensed under the [MIT License](LICENSE.md).
