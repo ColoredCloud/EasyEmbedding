@@ -65,9 +65,9 @@ This project implements a system for generating text using a custom implementati
 
 ### Train the bundle or just check the loss:
    ```python
-      for epoch in range(10):
-          print(model.forward(Bonds,weight=weight,bias=bias, optim=True, lable='b'))
-          print(model.forward(Bonds, weight=weight, bias=bias, optim=True, lable='c'))
+   for epoch in range(10):
+       print(model.forward(Bonds,weight=weight,bias=bias, optim=True, lable='b'))
+       print(model.forward(Bonds, weight=weight, bias=bias, optim=True, lable='c'))
    ```
 
 ### Set random number parameters:
