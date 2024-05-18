@@ -2,8 +2,7 @@
 
 ## Description
 
-This project implements a system for generating text using a custom implementation of word embeddings and a bundle-based optimization approach. It includes modules for word embedding generation (`TensorVec.py`), optimization strategies (`Optimizer.py`), and utility functions (`toolfunc.py`). Additionally, it provides a script (`train.py`) for training the system on a corpus and generating text.
-
+This project implements a system for generating text using a custom implementation of word embeddings and a bundle-based optimization approach. It includes modules for word embedding generation (`TensorVec.py`), optimization strategies (`Optimizer.py`), and utility functions (`toolfunc.py`). Additionally, it provides a script (`WordGenerator.py`) that applied the system to a word generation program
 ## Features
 
 - **Custom Word Embeddings**: The system uses custom word embeddings implemented in `TensorVec.py`, allowing for the representation of words as vectors.
@@ -15,7 +14,7 @@ This project implements a system for generating text using a custom implementati
 1. Clone the repository:
 
    ```bash
-   git clone https://github.com/your/repository.git
+   git clone https://github.com/ColoredCloud/EasyEmbedding.git
    ```
 
 2. Install dependencies:
@@ -26,48 +25,58 @@ This project implements a system for generating text using a custom implementati
 
 ## Usage
 
-### Training
+### Import:
+   ```python
+   from Optimizer import Bundle
+   from Tensorvec import Vec
+   from toolfunc import Ut
+   ```
 
-To train the system on a corpus and generate word embeddings:
+### Creat TensorVec instance:
+   ```python
+   a = Vec(value='a',embnum=3,device='cuda')
+   b = Vec([0,0,0],value='b',device='cuda')
+   ```
 
-```bash
-python train.py
-```
+### Set warning status:
+   ```python
+   Ut.setWarning(True)
+   a = Ut.noWarning(Vec,value='a',embnum=3,device='cuda')
+   ```
 
-### Text Generation
+### Creat Bundle instances:
+   ```python
+   modle = Bundle(Vec([0, 0, 0]), lr=1)
+   model1 = Bundle(Vec([1, 1, 1]), lr=1)
+   Bonds = {'a':model,'b':model1}
+   ```
 
-To generate text using the trained embeddings:
+### Prepare for the training of the bundle:
+   ```python
+   Bonds = {'a':model,'b':model1}
+   model.add(model1,0)
+   model1.add(model, 0)
+   ```
 
-```bash
-python generate_text.py
-```
+### Train the bundle or just check the loss:
+   ```python
+   model.forward(Bonds)
+   model1.forward(Bonds,optim=False)
+   ```
 
-## Example
+### Set random number parameters:
+   ```python
+   Normalizer.set('mean', 100)
+   Normalizer.normal(100,10)
+   ```
 
-```python
-# Example usage code
-import torch
-from Optimizer import Bundle
-from Tensorvec import Vec
-from toolfunc import Ut
 
-# Initialize Bundles
-model = Bundle(Vec([0, 0, 0]), lr=1)
-model1 = Bundle(Vec([1, 1, 1]), lr=1)
 
-# Add associations between Bundles
-Bonds = {'a': model, 'b': model1}
-model.add(model1, 0)
-model1.add(model, 0)
-
-# Forward pass to compute loss
-loss = model1.forward(Bonds, optim=False)
-print(loss)
-```
-
-## Contributors
-
-- [Your Name](https://github.com/your-profile)
+## Contributions
+   Contributions to TensorVec are welcome. If you have a good idea or suggestion, please open a new issue or submit a pull request.
+   
+### Contributors
+- [ColoredCloud](https://github.com/ColoredCloud)
 
 ## License
 
