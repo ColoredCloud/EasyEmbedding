@@ -29,8 +29,6 @@ def Vec(embList=None, value=None,embnum=0,device='cpu'):
 
 class TensorVec():
     def __init__(self, embList:list=None, value=None,embnum = 0,device='cpu'):
-        # 如果没有提供embList，则初始化一些基本属性并返回
-
         self.device = device
         self.isFunction = embList is None and embnum==0
         if self.isFunction:
@@ -161,7 +159,6 @@ class TensorVec():
 
 
 if __name__ == '__main__':
-    # 创建一个TensorVec实例
     funcs = TensorVec()
     Ut.setWarning(False)
     a = Vec(value='a',embnum=3,device='cuda')
